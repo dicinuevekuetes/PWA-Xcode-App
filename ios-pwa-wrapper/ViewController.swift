@@ -102,6 +102,22 @@ class ViewController: UIViewController {
         if #available(iOS 10.0, *) {
             webView.configuration.ignoresViewportScaleLimits = false
         }
+                // Inyección del Script de Bypass y Parche de Audio
+        let bypassScriptSource = """
+        Object.defineProperty(navigator, 'userAgent', { get: () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', configurable: true });
+        Object.defineProperty(navigator, 'platform', { get: () => 'Win32', configurable: true });
+        Object.defineProperty(navigator, 'standalone', { get: () => true, configurable: true });
+        
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        window.AudioContext = window.webkitAudioContext = function() {
+            const ctx = new AudioContextClass();
+            ctx.addEventListener('statechange', () => { if (ctx.state === 'suspended') ctx.resume(); });
+            return ctx;
+        };
+        """
+        let userScript = WKUserScript(source: bypassScriptSource, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+        webView.configuration.userContentController.addUserScript(userScript)
+
         // user agent
         if #available(iOS 9.0, *) {
             if (useCustomUserAgent) {
