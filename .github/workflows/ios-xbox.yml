@@ -1,0 +1,35 @@
+name: Build Xbox Container IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build and Archive
+        run: |
+          xcodebuild archive \
+            -project "ios-pwa-wrapper.xcodeproj" \
+            -scheme "ios-pwa-wrapper" \
+            -archivePath ./build/XboxContainer.xcarchive \
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export Payload
+        run: |
+          mkdir -p Payload
+          cp -r ./build/XboxContainer.xcarchive/Products/Applications/*.app ./Payload/
+          zip -r XboxContainer.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: XboxContainer-IPA
+          path: XboxContainer.ipa
