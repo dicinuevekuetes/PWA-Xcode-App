@@ -13,18 +13,18 @@ jobs:
       - name: Set up Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
 
-      # PARCHE SEGURO: Solo permite el login interno para Remote Play
-      - name: Patch App Logic
+      - name: Patch Navigation Logic
         run: |
-          # Buscar archivos Swift donde sea que estén
-          CONSTANTS_FILE=$(find . -name "Constants.swift")
           VIEWCONTROLLER_FILE=$(find . -name "ViewController.swift")
           
-          # 1. Permitir dominios de Microsoft (necesario para Remote Play)
-          sed -i '' 's/let allowedOrigin = "xbox.com"/let allowedOrigin = "xbox.com|microsoft.com|live.com"/g' "$CONSTANTS_FILE"
+          # 1. ELIMINAR el salto a Safari: Reemplazamos la lógica de expulsión por una de carga interna
+          # Buscamos el bloque que abre la URL en el sistema y lo neutralizamos
+          sed -i '' 's/UIApplication.shared.open(requestUrl)/webView.load(navigationAction.request)/g' "$VIEWCONTROLLER_FILE"
+          sed -i '' 's/UIApplication.shared.openURL(requestUrl)/webView.load(navigationAction.request)/g' "$VIEWCONTROLLER_FILE"
           
-          # 2. Evitar que abra Safari al detectar el cambio de host durante el login
-          sed -i '' 's/requestHost.range(of: allowedOrigin) != nil/requestHost.range(of: allowedOrigin, options: .regularExpression) != nil/g' "$VIEWCONTROLLER_FILE"
+          # 2. Forzar que CUALQUIER host sea permitido durante el proceso de login
+          # Esto hace que la app ignore si es microsoft, live o xbox y simplemente cargue el contenido
+          sed -i '' 's/if (requestHost.range(of: allowedOrigin) != nil ) {/if (true) { \/\/ Bypass Origin Check/g' "$VIEWCONTROLLER_FILE"
 
       - name: Build and Archive
         run: |
