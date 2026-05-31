@@ -1,0 +1,51 @@
+name: Build Xbox Container IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      # INYECCIÓN DINÁMICA BASADA EN TU CÓDIGO REAL
+      - name: Patch App Logic
+        run: |
+          # 1. Expandir dominios permitidos para incluir el login de Microsoft
+          sed -i '' 's/let allowedOrigin = "xbox.com"/let allowedOrigin = "xbox.com|microsoft.com|live.com|microsoftonline.com"/g' Constants.swift
+          
+          # 2. Forzar que la app NO abra Safari para los dominios de login
+          # Modificamos el bloque de decisionHandler para que acepte los nuevos dominios
+          sed -i '' 's/requestHost.range(of: allowedOrigin) != nil/requestHost.range(of: allowedOrigin, options: .regularExpression) != nil/g' ViewController.swift
+          
+          # 3. Actualizar el User-Agent a uno de 2026 para evitar el bloqueo de "Región no soportada"
+          sed -i '' 's/useCustomUserAgent = false/useCustomUserAgent = true/g' Constants.swift
+          sed -i '' 's/let customUserAgent = .*/let customUserAgent = "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/120.0.0.0 Safari\/537.36"/g' Constants.swift
+
+      - name: Build and Archive
+        run: |
+          xcodebuild archive \
+            -project "ios-pwa-wrapper.xcodeproj" \
+            -scheme "ios-pwa-wrapper" \
+            -archivePath ./build/XboxContainer.xcarchive \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Export Payload
+        run: |
+          mkdir -p Payload
+          cp -r ./build/XboxContainer.xcarchive/Products/Applications/*.app ./Payload/
+          zip -r XboxContainer.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: XboxContainer-IPA
+          path: XboxContainer.ipa
