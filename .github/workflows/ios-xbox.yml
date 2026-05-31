@@ -13,6 +13,11 @@ jobs:
       - name: Set up Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
 
+      # INYECCIÓN DE CÓDIGO: Fuerza a abrir los popups de Login en la misma ventana
+      - name: Inject Login Fix
+        run: |
+          find . -name "*.swift" -exec sed -i '' 's/func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {/func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? { webView.load(navigationAction.request); return nil;/g' {} +
+
       - name: Build and Archive
         run: |
           xcodebuild archive \
