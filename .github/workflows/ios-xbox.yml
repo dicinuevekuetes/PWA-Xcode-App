@@ -13,10 +13,11 @@ jobs:
       - name: Set up Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
 
-      # INYECCIÓN DE CÓDIGO: Fuerza a abrir los popups de Login en la misma ventana
-      - name: Inject Login Fix
+      # ESTA ES LA CLAVE: Forzamos la navegación interna y eliminamos el salto a Safari
+      - name: Inject Pro Login Fix
         run: |
-          find . -name "*.swift" -exec sed -i '' 's/func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {/func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? { webView.load(navigationAction.request); return nil;/g' {} +
+          find . -name "*.swift" -exec sed -i '' 's/decisionHandler(.allow)/if navigationAction.request.url?.host?.contains("microsoft.com") == true || navigationAction.request.url?.host?.contains("live.com") == true { webView.load(navigationAction.request); decisionHandler(.cancel); } else { decisionHandler(.allow); }/g' {} +
+          find . -name "*.swift" -exec sed -i '' 's/func webView(_ webView: WKWebView, createWebViewWith/func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? { webView.load(navigationAction.request); return nil; } \/\/ /g' {} +
 
       - name: Build and Archive
         run: |
