@@ -10,13 +10,13 @@ import UIKit
 
 // Basic App-/WebView-configuration
 let appTitle = "BDNGConf"
-let webAppUrl = URL(string: "https://bdng-conference.co.uk/")
-let allowedOrigin = "bdng-conference.co.uk"
+let webAppUrl = URL(string: "https://www.xbox.com/play")
+let allowedOrigin = "xbox.com"
 let menuButtonTitle = NSLocalizedString("menu", comment: "")
 let menuButtonJavascript = """
     $('.button-collapse').sideNav('show');
 """
-let useUserAgentPostfix = true
+let useUserAgentPostfix = false
 let userAgentPostfix = "iOSApp"
 let useCustomUserAgent = false
 let customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_1 like Mac OS X) AppleWebKit/604.2.10 (KHTML, like Gecko) Mobile/15A8401"
